@@ -142,3 +142,50 @@ def get_tenant(tenant_code: str):
         **dict(unit),
         "sales_history": [dict(r) for r in history],
     }
+
+
+@app.get("/api/sales/summary")
+def sales_summary(
+    group_by: str = Query(..., pattern="^(mall|category)$", description="Group results by 'mall' or 'category'"),
+    date_from: str | None = Query(None, pattern=r"^\d{4}-\d{2}$", description="Start month inclusive, format YYYY-MM"),
+    date_to: str | None = Query(None, pattern=r"^\d{4}-\d{2}$", description="End month inclusive, format YYYY-MM"),
+):
+    if date_from and date_to and date_from > date_to:
+        raise HTTPException(status_code=422, detail="date_from must not be after date_to")
+
+    conditions, params = [], []
+
+    if date_from:
+        conditions.append("report_month >= ?")
+        params.append(date_from)
+    if date_to:
+        conditions.append("report_month <= ?")
+        params.append(date_to)
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            f"""
+            SELECT {group_by} AS group_key,
+                   SUM(gross_sales)  AS total_gross_sales,
+                   COUNT(DISTINCT tenant_code || '|' || mall) AS unit_count
+              FROM sales
+             {where}
+             GROUP BY {group_by}
+             ORDER BY total_gross_sales DESC
+            """,
+            params,
+        ).fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+    return {
+        "group_by": group_by,
+        "date_from": date_from,
+        "date_to": date_to,
+        "data": [dict(r) for r in rows],
+    }
