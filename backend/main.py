@@ -21,7 +21,7 @@ Build these endpoints over the data your pipeline loaded:
 Design the response shapes yourself. Validation and error behaviour are
 part of what is being assessed.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import get_conn
@@ -40,3 +40,60 @@ app.add_middleware(
 def health():
     """Already works. Use it to confirm your setup before you start."""
     return {"status": "ok"}
+
+
+@app.get("/api/tenants")
+def list_tenants(
+    mall: str | None = Query(None, description="Filter by mall name (case-insensitive)"),
+    category: str | None = Query(None, description="Filter by category (case-insensitive)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Results per page (max 100)"),
+):
+    conditions, params = [], []
+
+    if mall:
+        conditions.append("LOWER(mall) = LOWER(?)")
+        params.append(mall)
+    if category:
+        conditions.append("LOWER(category) = LOWER(?)")
+        params.append(category)
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+
+    conn = get_conn()
+    try:
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM (SELECT 1 FROM sales {where} GROUP BY tenant_code, mall)",
+            params,
+        ).fetchone()[0]
+
+        offset = (page - 1) * page_size
+        rows = conn.execute(
+            f"""
+            SELECT tenant_code,
+                   tenant_name,
+                   mall,
+                   category,
+                   MAX(floor_area_sqm) AS floor_area_sqm
+              FROM sales
+             {where}
+             GROUP BY tenant_code, mall
+             ORDER BY LOWER(tenant_name), tenant_code
+             LIMIT ? OFFSET ?
+            """,
+            params + [page_size, offset],
+        ).fetchall()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+    return {
+        "data": [dict(r) for r in rows],
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": max(1, -(-total // page_size)),
+        },
+    }
