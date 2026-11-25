@@ -154,7 +154,7 @@ def summarise(conn):
     for name, total in conn.execute(
         """SELECT tenant_name, SUM(gross_sales) AS total
              FROM sales
-         GROUP BY tenant_name
+         GROUP BY LOWER(tenant_name)
          ORDER BY total DESC
             LIMIT 5"""
     ):
