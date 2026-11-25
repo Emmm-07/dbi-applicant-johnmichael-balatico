@@ -68,9 +68,11 @@ def parse_money(value):
     if is_null(value):
         return None
     text = value.strip().replace("₱", "").replace(",", "")
+    negative = text.startswith("(") and text.endswith(")")
     text = text.replace("(", "").replace(")", "")
     try:
-        return float(text)
+        result = float(text)
+        return -result if negative else result
     except ValueError:
         return None
 
