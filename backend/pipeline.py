@@ -105,7 +105,7 @@ def clean_rows(raw_rows):
         seen.add(key)
 
         sales = parse_money(row["gross_sales"])
-        if not sales:
+        if sales is None:
             rejected["no_sales"] += 1
             continue
 
