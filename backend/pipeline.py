@@ -112,13 +112,16 @@ def clean_rows(raw_rows):
             continue
 
         month = parse_date(row["report_month"])
+        if month is None:
+            rejected["bad_date"] += 1
+            continue
 
         cleaned.append({
             "tenant_code": code,
             "tenant_name": row["tenant_name"].strip(),
             "mall": MALLS.get(row["mall"].strip().lower(), row["mall"].strip()),
             "category": CATEGORIES.get(row["category"].strip(), row["category"].strip()),
-            "report_month": month.isoformat()[:7] if month else None,
+            "report_month": month.isoformat()[:7],
             "gross_sales": sales,
             "floor_area_sqm": parse_money(row["floor_area_sqm"]),
         })
