@@ -18,14 +18,14 @@ from db import get_conn
 RAW_CSV = Path(__file__).parent.parent / "data" / "tenant_sales_raw.csv"
 
 MALLS = {
-    "SM North EDSA": "SM North EDSA",
-    "SM Nort EDSA": "SM North EDSA",
-    "SM Megamall": "SM Megamall",
-    "SM Mega Mall": "SM Megamall",
-    "SM Mall of Asia": "SM Mall of Asia",
-    "Mall of Asia": "SM Mall of Asia",
-    "SM Southmall": "SM Southmall",
-    "SM South Mall": "SM Southmall",
+    "sm north edsa": "SM North EDSA",
+    "sm nort edsa": "SM North EDSA",
+    "sm megamall": "SM Megamall",
+    "sm mega mall": "SM Megamall",
+    "sm mall of asia": "SM Mall of Asia",
+    "mall of asia": "SM Mall of Asia",
+    "sm southmall": "SM Southmall",
+    "sm south mall": "SM Southmall",
 }
 
 CATEGORIES = {
@@ -116,7 +116,7 @@ def clean_rows(raw_rows):
         cleaned.append({
             "tenant_code": code,
             "tenant_name": row["tenant_name"].strip(),
-            "mall": MALLS.get(row["mall"].strip(), row["mall"].strip()),
+            "mall": MALLS.get(row["mall"].strip().lower(), row["mall"].strip()),
             "category": CATEGORIES.get(row["category"].strip(), row["category"].strip()),
             "report_month": month.isoformat()[:7] if month else None,
             "gross_sales": sales,
