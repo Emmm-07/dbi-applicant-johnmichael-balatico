@@ -10,7 +10,7 @@ numbers. The numbers are wrong.
 import csv
 import re
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from db import get_conn
@@ -90,6 +90,9 @@ def parse_date(value):
     if match:
         day, month, year = (int(g) for g in match.groups())
         return date(year, month, day)
+    match = re.fullmatch(r"([A-Za-z]{3})\s+(\d{4})", text)
+    if match:
+        return datetime.strptime(f"01 {match.group(1)} {match.group(2)}", "%d %b %Y").date()
     return None
 
 
