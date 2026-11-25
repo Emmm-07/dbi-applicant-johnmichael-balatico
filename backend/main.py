@@ -97,3 +97,48 @@ def list_tenants(
             "total_pages": max(1, -(-total // page_size)),
         },
     }
+
+
+@app.get("/api/tenants/{tenant_code}")
+def get_tenant(tenant_code: str):
+    conn = get_conn()
+    try:
+        unit = conn.execute(
+            """
+            SELECT tenant_code,
+                   tenant_name,
+                   mall,
+                   category,
+                   MAX(floor_area_sqm) AS floor_area_sqm
+              FROM sales
+             WHERE LOWER(tenant_code) = LOWER(?)
+             GROUP BY tenant_code, mall
+            """,
+            (tenant_code,),
+        ).fetchone()
+
+        if unit is None:
+            raise HTTPException(status_code=404, detail=f"Tenant '{tenant_code}' not found")
+
+        history = conn.execute(
+            """
+            SELECT report_month,
+                   SUM(gross_sales) AS gross_sales
+              FROM sales
+             WHERE LOWER(tenant_code) = LOWER(?)
+             GROUP BY report_month
+             ORDER BY report_month
+            """,
+            (tenant_code,),
+        ).fetchall()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+    return {
+        **dict(unit),
+        "sales_history": [dict(r) for r in history],
+    }
