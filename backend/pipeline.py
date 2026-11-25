@@ -127,6 +127,7 @@ def clean_rows(raw_rows):
 def load(rows):
     conn = get_conn()
     conn.executescript(SCHEMA)
+    conn.execute("DELETE FROM sales")
     conn.executemany(
         """INSERT INTO sales
            (tenant_code, tenant_name, mall, category, report_month,
