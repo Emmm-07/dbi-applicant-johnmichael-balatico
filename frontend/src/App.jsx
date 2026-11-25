@@ -154,6 +154,56 @@ export default function App() {
         </div>
       )}
 
+      {/* Sales history chart */}
+      {selectedCode && (
+        <div style={styles.chartSection}>
+          {detailLoading && <p style={{ color: "#666" }}>Loading sales history…</p>}
+          {detailError && <p style={styles.error}>Failed to load detail: {detailError}</p>}
+          {detail && (
+            <>
+              <h2 style={{ margin: "0 0 4px" }}>
+                {detail.tenant_name}
+                <span style={styles.detailMeta}>
+                  {detail.mall} · {detail.category}
+                </span>
+              </h2>
+              <p style={styles.chartLabel}>Monthly gross sales — click another row to compare</p>
+
+              {detail.sales_history.length === 0 ? (
+                <p style={{ color: "#666" }}>No sales history available.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart
+                    data={detail.sales_history}
+                    margin={{ top: 8, right: 32, bottom: 8, left: 16 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                    <XAxis dataKey="report_month" tick={{ fontSize: 11 }} />
+                    <YAxis
+                      tickFormatter={v => `₱${(v / 1_000_000).toFixed(1)}M`}
+                      tick={{ fontSize: 11 }}
+                      width={72}
+                    />
+                    <Tooltip
+                      formatter={v =>
+                        [`₱${Number(v).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`, "Gross Sales"]
+                      }
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="gross_sales"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </main>
   );
 }
