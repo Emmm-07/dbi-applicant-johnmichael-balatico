@@ -29,18 +29,19 @@ MALLS = {
 }
 
 CATEGORIES = {
-    "F&B": "Food & Beverage",
-    "Food & Beverage": "Food & Beverage",
+    "f&b": "Food & Beverage",
+    "food & beverage": "Food & Beverage",
     "food and beverage": "Food & Beverage",
-    "F and B": "Food & Beverage",
-    "Apparel": "Apparel",
-    "Fashion/Apparel": "Apparel",
-    "Services": "Services",
-    "Service": "Services",
-    "Electronics": "Electronics",
-    "Gadgets/Electronics": "Electronics",
-    "Home": "Home",
-    "Home & Living": "Home",
+    "f and b": "Food & Beverage",
+    "food and bev": "Food & Beverage",
+    "apparel": "Apparel",
+    "fashion/apparel": "Apparel",
+    "services": "Services",
+    "service": "Services",
+    "electronics": "Electronics",
+    "gadgets/electronics": "Electronics",
+    "home": "Home",
+    "home & living": "Home",
 }
 
 NULLS = {"", "N/A", "n/a", "NULL", "-", "#N/A", "none"}
@@ -123,7 +124,7 @@ def clean_rows(raw_rows):
             "tenant_code": code,
             "tenant_name": row["tenant_name"].strip(),
             "mall": MALLS.get(row["mall"].strip().lower(), row["mall"].strip()),
-            "category": CATEGORIES.get(row["category"].strip(), row["category"].strip()),
+            "category": CATEGORIES.get(row["category"].strip().lower(), row["category"].strip()),
             "report_month": month.isoformat()[:7],
             "gross_sales": sales,
             "floor_area_sqm": parse_money(row["floor_area_sqm"]),
