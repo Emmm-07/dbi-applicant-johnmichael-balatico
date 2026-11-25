@@ -9,7 +9,6 @@ numbers. The numbers are wrong.
 """
 import csv
 import re
-import sqlite3
 from datetime import date, datetime
 from pathlib import Path
 
